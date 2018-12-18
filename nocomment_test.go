@@ -32,7 +32,7 @@ var stripperTests = []stripperTest{
 	{"keepAllEmpty", true, true, true, "", "", ""},
 	{"basic line", false, false, false, "Hello World", "Hello World", ""},
 	{
-		"remove all", false, false, false, "/* this is a c comment */// this is a C++ comment\nHello World# this is a shell comment\n",
+		"remove all", false, false, false, "/* this is a c comment */// this is a C++ comment\nHello World# this is a shell comment\n-- SQL comment\n",
 		"Hello World", "",
 	},
 	{

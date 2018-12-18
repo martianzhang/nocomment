@@ -30,6 +30,8 @@ type Stripper struct {
 	KeepCPPComments bool
 	// KeepShellComments: do not elide C style comments (#).
 	KeepShellComments bool
+	// KeepSQLComments: do not elide SQL style comments (--).
+	KeepSQLComments bool
 }
 
 // Clean removes comments from the input.
@@ -50,6 +52,10 @@ func (s *Stripper) Clean(input []byte) (b []byte, err error) {
 			}
 		case tokenShellComment:
 			if !s.KeepShellComments { // if shell comments are to be elided, don't append this token
+				continue
+			}
+		case tokenSQLComment:
+			if !s.KeepSQLComments { // if SQL comments are to be elided, don't append this token
 				continue
 			}
 		case tokenEOF:

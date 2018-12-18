@@ -53,6 +53,7 @@ func (t token) Error() string {
 const (
 	cppComment    = "//"
 	shellComment  = "#"
+	sqlComment    = "--"
 	cCommentBegin = "/*"
 	cCommentEnd   = "*/"
 	cr            = '\r'
@@ -67,6 +68,7 @@ const (
 	tokenText          // anything that isn't one of the following
 	tokenCPPComment    // //
 	tokenShellComment  // #
+	tokenSQLComment    // --
 	tokenCCommentStart // /*
 	tokenCCommentEnd   // */
 	tokenCComment      // /* */
@@ -77,6 +79,7 @@ const (
 var key = map[string]tokenType{
 	"//": tokenCPPComment,
 	"#":  tokenShellComment,
+	"--": tokenSQLComment,
 	"/*": tokenCCommentStart,
 	"*/": tokenCCommentEnd,
 	"\"": tokenDoubleQuote,
@@ -97,6 +100,9 @@ const (
 	// in them which should not be processed as comments)
 	// feels weird: -mohae
 	doubleQuote // ""
+	// SQL comments
+	// https://dev.mysql.com/doc/refman/5.7/en/comments.html
+	SQLComment
 )
 
 const eof = -1
@@ -209,6 +215,8 @@ func lexText(l *lexer) stateFn {
 				return lexCPPComment
 			case ShellComment:
 				return lexShellComment
+			case SQLComment:
+				return lexSQLComment
 			case CComment:
 				return lexCComment
 			//case quoteSingle:
@@ -258,6 +266,8 @@ func (l *lexer) atComment() (is bool, typ commentType) {
 		return true, CPPComment
 	case tokenCCommentStart:
 		return true, CComment
+	case tokenSQLComment:
+		return true, SQLComment
 	}
 	return false, none
 }
@@ -273,6 +283,20 @@ func lexCPPComment(l *lexer) stateFn {
 	}
 	// comment is done, ignore processed runes and continue lexing
 	l.emit(tokenCPPComment)
+	return lexText
+}
+
+// lexSQLComment handles lexing of shell style comments: -- to \n or eof
+func lexSQLComment(l *lexer) stateFn {
+	// scan until the comment is consumed: EOL is encountered
+	for {
+		r := l.next()
+		if r == nl || r == eof {
+			break
+		}
+	}
+	// comment is done, ignore processed runes and continue lexing
+	l.emit(tokenSQLComment)
 	return lexText
 }
 
